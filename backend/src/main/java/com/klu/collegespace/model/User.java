@@ -3,6 +3,7 @@ package com.klu.collegespace.model;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -10,7 +11,7 @@ import lombok.Data;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
     private String name;
     @Column(unique = true, nullable = false)
     private String email;
