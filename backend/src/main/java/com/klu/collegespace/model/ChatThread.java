@@ -9,7 +9,6 @@ import lombok.Data;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,12 +26,12 @@ public class ChatThread {
     @JdbcTypeCode(SqlTypes.JSON)
     private List<Map<String, Object>> messages = new ArrayList<>();
 
-    private LocalDateTime updatedAt;
+    private String updatedAt;
 
     @PrePersist
     @PreUpdate
     void touch() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = java.time.Instant.now().toString();
         if (messages == null) messages = new ArrayList<>();
     }
 }

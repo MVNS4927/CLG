@@ -13,10 +13,10 @@ public class Activity {
     private String id;
     private String title;
     private String meta;
-    private LocalDateTime ts;
+    private String ts;
 
     @PrePersist
     void onCreate() {
-        if (ts == null) ts = LocalDateTime.now();
+        if (ts == null) ts = LocalDateTime.now().toString();
     }
 }

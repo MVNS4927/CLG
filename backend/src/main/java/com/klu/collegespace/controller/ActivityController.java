@@ -4,7 +4,6 @@ import com.klu.collegespace.model.Activity;
 import com.klu.collegespace.repository.ActivityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,7 +23,7 @@ public class ActivityController {
 
     @PostMapping
     public Activity logActivity(@RequestBody Activity activity) {
-        if (activity.getTs() == null) activity.setTs(LocalDateTime.now());
+        if (activity.getTs() == null) activity.setTs(java.time.Instant.now().toString());
         return activityRepository.save(activity);
     }
 
