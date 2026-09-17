@@ -16,6 +16,7 @@ import ToastStack from './components/ToastStack';
 import GlobalSearch from './components/GlobalSearch';
 import OfflineBanner from './components/OfflineBanner';
 import Footer from './components/Footer';
+import AdminDashboard from './pages/AdminDashboard';
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useApp();
@@ -106,6 +107,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to={user ? '/' : '/auth'} replace />} />
         </Routes>
         <ChatPanel />

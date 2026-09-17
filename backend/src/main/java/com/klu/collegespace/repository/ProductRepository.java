@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, String> {
     List<Product> findByType(String type);
+    List<Product> findAllByOrderByCreatedAtDesc();
 }

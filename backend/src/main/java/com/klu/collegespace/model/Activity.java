@@ -14,8 +14,9 @@ public class Activity {
     private String title;
     private String meta;
     private LocalDateTime ts;
-	public void setTs(LocalDateTime now) {
-		// TODO Auto-generated method stub
-		
-	}
+
+    @PrePersist
+    void onCreate() {
+        if (ts == null) ts = LocalDateTime.now();
+    }
 }

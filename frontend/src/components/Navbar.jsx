@@ -52,6 +52,7 @@ export default function Navbar() {
                 {item.label}
               </NavLink>
             ))}
+            {user?.isAdmin && <NavLink to="/admin" className="px-3 py-2 rounded-lg text-sm text-red-600">Admin</NavLink>}
           </nav>
           <div className="hidden lg:flex items-center gap-2 flex-1 justify-end">
             <div className="relative w-64">

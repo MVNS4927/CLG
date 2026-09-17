@@ -7,6 +7,7 @@ const AppContext = createContext(null);
 const defaultProducts = [];
 
 const defaultUser = null;
+const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || '').split(',').map((email) => email.trim().toLowerCase()).filter(Boolean);
 
 const defaultActivity = [
   { id: 'a1', title: 'Joined CLG Space', meta: 'Welcome aboard!', ts: new Date().toISOString() },
@@ -95,7 +96,9 @@ export function AppProvider({ children }) {
   };
 
   const login = (payload) => {
-    setUser(payload);
+    const nextUser = { ...payload, isAdmin: Boolean(payload.email && adminEmails.includes(payload.email.toLowerCase())) };
+    setUser(nextUser);
+    api.syncUser(nextUser).catch(() => {});
     notify(`Welcome back, ${payload.name || 'Student'}!`, 'success');
     addActivity('Logged in', payload.college || '');
   };
@@ -142,6 +145,13 @@ export function AppProvider({ children }) {
     setChats((prev) => {
       const history = prev[chatId] || [];
       const next = [...history, { from: 'me', text, ts: new Date().toISOString() }];
+      api.saveChat({
+        id: chatId,
+        userEmail: user?.email || 'unknown',
+        partnerName: seller,
+        productId: activeChat.partner?.id,
+        messages: next
+      }).catch(() => {});
       return { ...prev, [chatId]: next };
     });
     notify(`Message sent to ${seller}`, 'info');
@@ -169,16 +179,18 @@ export function AppProvider({ children }) {
     setActiveChat({ id: chatId, partner: fullPartner });
 
     if (!chats[chatId]) {
+      const initialMessages = [
+        {
+          from: 'partner',
+          text: `Hey! I'm ${sellerName}. Let's talk about ${fullPartner.title}.`,
+          ts: new Date().toISOString()
+        }
+      ];
       setChats((prev) => ({
         ...prev,
-        [chatId]: [
-          {
-            from: 'partner',
-            text: `Hey! I'm ${sellerName}. Let's talk about ${fullPartner.title}.`,
-            ts: new Date().toISOString()
-          }
-        ]
+        [chatId]: initialMessages
       }));
+      api.saveChat({ id: chatId, userEmail: user?.email || 'unknown', partnerName: sellerName, productId: fullPartner.id, messages: initialMessages }).catch(() => {});
     }
 
     setChatProfiles((prev) => ({

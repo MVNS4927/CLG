@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/activities")
@@ -22,7 +24,7 @@ public class ActivityController {
 
     @PostMapping
     public Activity logActivity(@RequestBody Activity activity) {
-        activity.setTs(LocalDateTime.now());
+        if (activity.getTs() == null) activity.setTs(LocalDateTime.now());
         return activityRepository.save(activity);
     }
 
@@ -33,6 +35,9 @@ public class ActivityController {
 
     @DeleteMapping("/{id}")
     public void deleteActivity(@PathVariable String id) {
+        if (!activityRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Activity not found");
+        }
         activityRepository.deleteById(id);
     }
 }
