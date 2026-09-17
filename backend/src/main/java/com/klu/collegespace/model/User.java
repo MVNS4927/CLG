@@ -19,6 +19,6 @@ public class User {
     @Column(name = "password_hash")
     private String passwordHash;
     private String college;
-    @Column(name = "college_id")
+    @Column(name = "college_id", unique = true, nullable = false)
     private String collegeId;
 }

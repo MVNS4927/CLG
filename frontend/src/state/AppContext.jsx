@@ -31,7 +31,7 @@ const storage = {
 };
 
 export function AppProvider({ children }) {
-  const [user, setUser] = useState(() => storage.get('user', defaultUser));
+  const [user, setUser] = useState(defaultUser);
   const [products, setProducts] = useState(defaultProducts);
   const [wishlist, setWishlist] = useState(() => storage.get('wishlist', []));
   const [chats, setChats] = useState(() => storage.get('chats', {}));
@@ -44,7 +44,6 @@ export function AppProvider({ children }) {
   const [orders, setOrders] = useState(() => storage.get('orders', []));
   const [globalQuery, setGlobalQuery] = useState('');
 
-  useEffect(() => storage.set('user', user), [user]);
   useEffect(() => storage.set('wishlist', wishlist), [wishlist]);
   useEffect(() => storage.set('chats', chats), [chats]);
   useEffect(() => storage.set('orders', orders), [orders]);

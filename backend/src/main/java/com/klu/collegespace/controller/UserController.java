@@ -25,22 +25,25 @@ public class UserController {
     }
 
     @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
     public User register(@RequestBody Map<String, Object> payload) {
         String email = required(payload, "email").toLowerCase();
         String password = required(payload, "password");
         if (password.length() < 6) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 6 characters");
         }
-        User user = userRepository.findByEmail(email).orElseGet(User::new);
-        boolean existingLegacyAccount = user.getId() != null && user.getPasswordHash() == null;
-        if (user.getId() != null && !existingLegacyAccount) {
+        if (userRepository.findByEmail(email).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "An account already exists for this email");
         }
+        if (userRepository.findByCollegeId(required(payload, "collegeId")).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "An account already exists for this college ID");
+        }
+        User user = new User();
         user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(password));
         user.setName(required(payload, "name"));
         user.setCollege(required(payload, "college"));
-        user.setCollegeId(required(payload, "collegeId"));
+        user.setCollegeId(payload.get("collegeId").toString().trim());
         return userRepository.save(user);
     }
 
@@ -50,10 +53,7 @@ public class UserController {
         String password = required(payload, "password");
         User user = findByIdentifier(identifier)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
-        if (user.getPasswordHash() == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This account needs password setup. Choose Register and use the same email.");
-        }
-        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
         return user;
@@ -62,17 +62,6 @@ public class UserController {
     private java.util.Optional<User> findByIdentifier(String identifier) {
         if (identifier.contains("@")) return userRepository.findByEmail(identifier.toLowerCase());
         return userRepository.findByCollegeId(identifier);
-    }
-
-    @PostMapping("/sync")
-    public User syncUser(@RequestBody Map<String, Object> payload) {
-        String email = String.valueOf(payload.get("email"));
-        User user = userRepository.findByEmail(email).orElseGet(User::new);
-        user.setEmail(email);
-        user.setName(valueOr(payload, "name", user.getName() == null ? "Student" : user.getName()));
-        user.setCollege(valueOr(payload, "college", null));
-        user.setCollegeId(valueOr(payload, "collegeId", null));
-        return userRepository.save(user);
     }
 
     @PostMapping("/chats")
