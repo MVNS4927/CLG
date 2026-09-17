@@ -5,6 +5,9 @@ import com.klu.collegespace.model.User;
 import com.klu.collegespace.repository.ChatThreadRepository;
 import com.klu.collegespace.repository.UserRepository;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Map;
 
@@ -14,10 +17,43 @@ import java.util.Map;
 public class UserController {
     private final UserRepository userRepository;
     private final ChatThreadRepository chatRepository;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public UserController(UserRepository userRepository, ChatThreadRepository chatRepository) {
         this.userRepository = userRepository;
         this.chatRepository = chatRepository;
+    }
+
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    public User register(@RequestBody Map<String, Object> payload) {
+        String email = required(payload, "email").toLowerCase();
+        String password = required(payload, "password");
+        if (password.length() < 6) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 6 characters");
+        }
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "An account already exists for this email");
+        }
+        User user = new User();
+        user.setEmail(email);
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setName(required(payload, "name"));
+        user.setCollege(required(payload, "college"));
+        user.setCollegeId(required(payload, "collegeId"));
+        return userRepository.save(user);
+    }
+
+    @PostMapping("/login")
+    public User login(@RequestBody Map<String, Object> payload) {
+        String email = required(payload, "email").toLowerCase();
+        String password = required(payload, "password");
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+        }
+        return user;
     }
 
     @PostMapping("/sync")
@@ -45,5 +81,11 @@ public class UserController {
     private String valueOr(Map<String, Object> payload, String key, String fallback) {
         Object value = payload.get(key);
         return value == null ? fallback : String.valueOf(value);
+    }
+
+    private String required(Map<String, Object> payload, String key) {
+        String value = valueOr(payload, key, "").trim();
+        if (value.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, key + " is required");
+        return value;
     }
 }

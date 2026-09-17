@@ -71,6 +71,22 @@ export const api = {
     return res.ok ? res.json() : null;
   },
 
+  register: async (user) => {
+    const res = await fetch(`${API_BASE}/users/register`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(user)
+    });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Registration failed');
+    return res.json();
+  },
+
+  login: async (credentials) => {
+    const res = await fetch(`${API_BASE}/users/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(credentials)
+    });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Invalid email or password');
+    return res.json();
+  },
+
   saveChat: async (chat) => {
     const res = await fetch(`${API_BASE}/users/chats`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(chat)

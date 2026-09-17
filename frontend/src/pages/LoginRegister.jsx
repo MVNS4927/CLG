@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowRight, FiLock, FiUser } from 'react-icons/fi';
 import { useApp } from '../state/AppContext';
+import { api } from '../utils/api';
 import logo from '/logo.png';
 
 const streams = ['Engineering', 'Medical'];
@@ -19,6 +20,7 @@ export default function LoginRegister() {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const { login, user } = useApp();
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) navigate('/');
@@ -28,17 +30,28 @@ export default function LoginRegister() {
     const next = {};
     if (!form.college) next.college = 'Required';
     if (!form.collegeId) next.collegeId = 'Required';
-    if (mode === 'register' && !form.email) next.email = 'Required';
+    if (!form.email) next.email = 'Required';
+    if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) next.email = 'Enter a valid email';
+    if (mode === 'register' && form.password.length < 6) next.password = 'Minimum 6 characters';
     if (!form.password) next.password = 'Required';
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    login(form);
-    navigate('/');
+    setSubmitting(true);
+    setErrors({});
+    try {
+      const account = mode === 'register' ? await api.register(form) : await api.login(form);
+      await login(account);
+      navigate('/');
+    } catch (error) {
+      setErrors({ form: error.message || 'Authentication failed' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const toggle = () => {
@@ -89,6 +102,7 @@ export default function LoginRegister() {
             </button>
           </div>
           <form className="space-y-4" onSubmit={submit}>
+            {errors.form && <p className="text-sm text-red-600">{errors.form}</p>}
             <div>
               <label className="text-sm font-semibold">College Name*</label>
               <input
@@ -162,8 +176,8 @@ export default function LoginRegister() {
               </div>
               {errors.password && <p className="text-xs text-amber-600 mt-1">{errors.password}</p>}
             </div>
-            <button type="submit" className="btn-primary w-full py-3 mt-2">
-              {mode === 'login' ? 'Login' : 'Register'} <FiArrowRight />
+            <button type="submit" disabled={submitting} className="btn-primary w-full py-3 mt-2 disabled:opacity-60">
+              {submitting ? 'Please wait...' : mode === 'login' ? 'Login' : 'Register'} <FiArrowRight />
             </button>
           </form>
         </div>

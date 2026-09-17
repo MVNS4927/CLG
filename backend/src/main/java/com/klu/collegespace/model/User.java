@@ -1,6 +1,7 @@
 package com.klu.collegespace.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 @Entity
@@ -13,6 +14,9 @@ public class User {
     private String name;
     @Column(unique = true, nullable = false)
     private String email;
+    @JsonIgnore
+    @Column(name = "password_hash")
+    private String passwordHash;
     private String college;
     @Column(name = "college_id")
     private String collegeId;

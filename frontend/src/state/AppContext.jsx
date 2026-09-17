@@ -95,12 +95,12 @@ export function AppProvider({ children }) {
     api.clearActivities(); // Sync to DB
   };
 
-  const login = (payload) => {
+  const login = async (payload) => {
     const nextUser = { ...payload, isAdmin: Boolean(payload.email && adminEmails.includes(payload.email.toLowerCase())) };
     setUser(nextUser);
-    api.syncUser(nextUser).catch(() => {});
     notify(`Welcome back, ${payload.name || 'Student'}!`, 'success');
     addActivity('Logged in', payload.college || '');
+    return nextUser;
   };
 
   const logout = () => {
