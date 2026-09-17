@@ -25,17 +25,17 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    @ResponseStatus(HttpStatus.CREATED)
     public User register(@RequestBody Map<String, Object> payload) {
         String email = required(payload, "email").toLowerCase();
         String password = required(payload, "password");
         if (password.length() < 6) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 6 characters");
         }
-        if (userRepository.findByEmail(email).isPresent()) {
+        User user = userRepository.findByEmail(email).orElseGet(User::new);
+        boolean existingLegacyAccount = user.getId() != null && user.getPasswordHash() == null;
+        if (user.getId() != null && !existingLegacyAccount) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "An account already exists for this email");
         }
-        User user = new User();
         user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(password));
         user.setName(required(payload, "name"));
@@ -50,7 +50,10 @@ public class UserController {
         String password = required(payload, "password");
         User user = findByIdentifier(identifier)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
-        if (user.getPasswordHash() == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
+        if (user.getPasswordHash() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This account needs password setup. Choose Register and use the same email.");
+        }
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
         return user;
