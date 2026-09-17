@@ -28,10 +28,11 @@ export default function LoginRegister() {
 
   const validate = () => {
     const next = {};
-    if (!form.college) next.college = 'Required';
-    if (!form.collegeId) next.collegeId = 'Required';
-    if (!form.email) next.email = 'Required';
-    if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) next.email = 'Enter a valid email';
+    if (mode === 'register' && !form.college) next.college = 'Required';
+    if (mode === 'register' && !form.collegeId) next.collegeId = 'Required';
+    if (mode === 'register' && !form.email) next.email = 'Required';
+    if (mode === 'register' && form.email && !/^\S+@\S+\.\S+$/.test(form.email)) next.email = 'Enter a valid email';
+    if (mode === 'login' && !form.identifier) next.identifier = 'Required';
     if (mode === 'register' && form.password.length < 6) next.password = 'Minimum 6 characters';
     if (!form.password) next.password = 'Required';
     setErrors(next);
@@ -44,7 +45,7 @@ export default function LoginRegister() {
     setSubmitting(true);
     setErrors({});
     try {
-      const account = mode === 'register' ? await api.register(form) : await api.login(form);
+      const account = mode === 'register' ? await api.register(form) : await api.login({ identifier: form.identifier, password: form.password });
       await login(account);
       navigate('/');
     } catch (error) {
@@ -82,14 +83,19 @@ export default function LoginRegister() {
           </p>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="card p-4">
-              <p className="text-gray-500">Verified Community</p>
-              <p className="font-semibold mt-1">Only your campus peers</p>
+              <p className="text-gray-500">Student Verified</p>
+              <p className="font-semibold mt-1">Trusted campus members</p>
             </div>
             <div className="card p-4">
-              <p className="text-gray-500">Instant Chats</p>
-              <p className="font-semibold mt-1">WhatsApp-style DM</p>
+              <p className="text-gray-500">Quick &amp; Simple</p>
+              <p className="font-semibold mt-1">Find it. Buy it. Done</p>
             </div>
           </div>
+          <img
+            src="/buy-borrow.png"
+            alt="Buy and borrow campus essentials"
+            className="w-full rounded-2xl object-contain"
+          />
         </div>
         <div className="card p-8">
           <div className="flex justify-between items-center mb-6">
@@ -103,7 +109,7 @@ export default function LoginRegister() {
           </div>
           <form className="space-y-4" onSubmit={submit}>
             {errors.form && <p className="text-sm text-red-600">{errors.form}</p>}
-            <div>
+            {mode === 'register' && <div>
               <label className="text-sm font-semibold">College Name*</label>
               <input
                 value={form.college}
@@ -112,8 +118,8 @@ export default function LoginRegister() {
                 placeholder="Your College"
               />
               {errors.college && <p className="text-xs text-amber-600 mt-1">{errors.college}</p>}
-            </div>
-            <div className="grid md:grid-cols-2 gap-3">
+            </div>}
+            {mode === 'register' && <div className="grid md:grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-semibold">College ID*</label>
                 <input
@@ -136,9 +142,9 @@ export default function LoginRegister() {
                   ))}
                 </select>
               </div>
-            </div>
+            </div>}
             <div className="grid md:grid-cols-2 gap-3">
-              <div>
+              {mode === 'register' && <div>
                 <label className="text-sm font-semibold">Name</label>
                 <div className="relative">
                   <FiUser className="absolute left-3 top-3 text-gray-400" />
@@ -149,8 +155,8 @@ export default function LoginRegister() {
                     placeholder="Your name"
                   />
                 </div>
-              </div>
-              <div>
+              </div>}
+              {mode === 'register' ? <div>
                 <label className="text-sm font-semibold">Email {mode === 'register' && '*'}</label>
                 <input
                   type="email"
@@ -160,7 +166,17 @@ export default function LoginRegister() {
                   placeholder="you@college.edu"
                 />
                 {errors.email && <p className="text-xs text-amber-600 mt-1">{errors.email}</p>}
-              </div>
+              </div> : <div className="md:col-span-2">
+                <label className="text-sm font-semibold">College ID or Email*</label>
+                <input
+                  type="text"
+                  value={form.identifier || ''}
+                  onChange={(e) => set('identifier', e.target.value)}
+                  className="w-full mt-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2"
+                  placeholder="College ID or email"
+                />
+                {errors.identifier && <p className="text-xs text-amber-600 mt-1">{errors.identifier}</p>}
+              </div>}
             </div>
             <div>
               <label className="text-sm font-semibold">Password*</label>

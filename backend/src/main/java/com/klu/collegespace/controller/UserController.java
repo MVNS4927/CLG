@@ -46,14 +46,19 @@ public class UserController {
 
     @PostMapping("/login")
     public User login(@RequestBody Map<String, Object> payload) {
-        String email = required(payload, "email").toLowerCase();
+        String identifier = required(payload, "identifier");
         String password = required(payload, "password");
-        User user = userRepository.findByEmail(email)
+        User user = findByIdentifier(identifier)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
         if (user.getPasswordHash() == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
         return user;
+    }
+
+    private java.util.Optional<User> findByIdentifier(String identifier) {
+        if (identifier.contains("@")) return userRepository.findByEmail(identifier.toLowerCase());
+        return userRepository.findByCollegeId(identifier);
     }
 
     @PostMapping("/sync")
