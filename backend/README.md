@@ -21,4 +21,4 @@ The backend uses PostgreSQL by default:
 - Username: `postgres`
 - Password: empty by default
 
-Override `DATABASE_URL`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD` as environment variables. The default admin access key is `CLG SPACE BEV`; override it with `ADMIN_ACCESS_KEY` for deployment.
+Override `DATABASE_URL`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD` as environment variables. The default admin emails are the three configured KL University accounts, and the default admin access key is `CLG SPACE BEV`; override them with `ADMIN_EMAILS` and `ADMIN_ACCESS_KEY` for deployment.
